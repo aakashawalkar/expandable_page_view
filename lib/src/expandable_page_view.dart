@@ -1,5 +1,7 @@
 library expandable_page_view;
 
+import 'dart:math';
+
 import 'package:expandable_page_view/src/size_reporting_widget.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -193,9 +195,9 @@ class _ExpandablePageViewState extends State<ExpandablePageView> {
   bool _shouldDisposePageController = false;
   bool _firstPageLoaded = false;
 
-  double get _currentSize => _sizes[_currentPage];
+  double get _currentSize => _sizes.isEmpty ? 0 : _sizes[_currentPage];
 
-  double get _previousSize => _sizes[_previousPage];
+  double get _previousSize => _sizes.isEmpty ? 0 : _sizes[_previousPage];
 
   bool get isBuilder => widget.itemBuilder != null;
 
@@ -207,7 +209,7 @@ class _ExpandablePageViewState extends State<ExpandablePageView> {
     _sizes = _prepareSizes();
     _pageController = widget.controller ?? PageController();
     _pageController.addListener(_updatePage);
-    _currentPage = _pageController.initialPage.clamp(0, _sizes.length - 1);
+    _currentPage = _pageController.initialPage.clamp(0, max(0, _sizes.length - 1));
     _previousPage = _currentPage - 1 < 0 ? 0 : _currentPage - 1;
     _shouldDisposePageController = widget.controller == null;
   }
@@ -260,17 +262,16 @@ class _ExpandablePageViewState extends State<ExpandablePageView> {
   void _reinitializeSizes() {
     final currentPageSize = _sizes[_currentPage];
     _sizes = _prepareSizes();
-
     if (_currentPage >= _sizes.length) {
       final differenceFromPreviousToCurrent = _previousPage - _currentPage;
       _currentPage = _sizes.length - 1;
       widget.onPageChanged?.call(_currentPage);
 
       _previousPage = (_currentPage + differenceFromPreviousToCurrent)
-          .clamp(0, _sizes.length - 1);
+          .clamp(0, max(0, _sizes.length - 1));
     }
 
-    _previousPage = _previousPage.clamp(0, _sizes.length - 1);
+    _previousPage = _previousPage.clamp(0, max(0, _sizes.length - 1));
     _sizes[_currentPage] = currentPageSize;
   }
 
